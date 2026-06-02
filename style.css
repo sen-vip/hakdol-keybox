@@ -279,8 +279,8 @@ h1{
   align-items:center;
   justify-content:center;
   border:1px solid var(--blue);
-  background:var(--blue);
-  color:#fff;
+  background:#5b7fd8(--blue);
+  color:#5b7fd8;
   border-radius:10px;
   min-width:40px;
   min-height:32px;
