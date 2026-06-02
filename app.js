@@ -4,7 +4,7 @@ const DEFAULT_INFO = {
   "school": [
     [
       "학교 메일",
-      "school"
+      "school@sen.go.kr"
     ],
     [
       "사업자등록번호",
