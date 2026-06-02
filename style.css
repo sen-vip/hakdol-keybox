@@ -335,7 +335,7 @@ h1{
   font-size:20px;
   line-height:1.25;
   letter-spacing:-.035em;
-  font-weight:850;
+  font-weight:800;
 }
 .section-desc{margin:6px 0 0!important;color:#64748b;font-size:13px;font-weight:650}
 .account-title-side{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
