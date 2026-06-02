@@ -278,8 +278,8 @@ h1{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  border:1px solid var(--blue);
-  background:var(--blue);
+  border:1px solid #6e8fde;
+  background:#6e8fde;
   color:#fff;
   border-radius:10px;
   min-width:40px;
