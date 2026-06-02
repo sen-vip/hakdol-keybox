@@ -695,7 +695,7 @@ td{height:68px;font-size:15px}
 .star-btn{color:#91a4bd;font-size:24px;padding:4px 8px}
 .star-btn:hover{color:#2563eb;background:#f2f7ff}
 .star-btn.on{color:#f59e0b}
-.drag-handle{font-size:18px;color:#94a3b8}
+.drag-handle{font-size:18px;color:#94a3b8;opacity:.65}
 .app-footer{color:#9aa8ba}
 @media (max-width:1100px){.quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:800px){
