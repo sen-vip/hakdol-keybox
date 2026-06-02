@@ -278,16 +278,16 @@ h1{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  border:1px solid #5b7fd8;
-  background:#5b7fd8;
+  border:1px solid #7ea0ee;
+  background:#7ea0ee;
   color:#fff;
-  border-radius:10px;
-  min-width:40px;
-  min-height:32px;
-  padding:0 10px;
-  font-size:12.5px;
+  border-radius:9px;
+  min-width:36px;
+  min-height:30px;
+  padding:0 8px;
+  font-size:12px;
   line-height:1;
-  font-weight:900;
+  font-weight:800;
 }
 .copy-btn:hover,.copy-chip:hover,.copy-pill:hover,.copy-icon:hover{
   background:var(--blue-dark);
