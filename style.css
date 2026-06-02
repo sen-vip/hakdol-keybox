@@ -1039,3 +1039,11 @@ h1 .key-emoji{
   .local-secure{display:inline-flex!important;}
 }
 @media print{.local-secure{display:none!important;}}
+
+.info-divider{
+  display:none!important;
+}
+
+.info-row{
+  padding:14px 0;
+}
