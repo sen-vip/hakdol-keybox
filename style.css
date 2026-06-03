@@ -161,7 +161,7 @@ h1{
   justify-content:space-between;
   gap:14px;
   margin:0 0 18px;
-  padding:12px;
+  padding:20px 24px;
   background:rgba(255,255,255,.82);
   border:1px solid var(--line);
   border-radius:18px;
@@ -653,7 +653,7 @@ h1{font-size:38px;font-weight:700;letter-spacing:-.06em;color:#101827}
   background:var(--blue);
   border-radius:999px;
 }
-.toolbar{border-radius:24px;padding:20px 22px;margin-bottom:16px;background:rgba(255,255,255,.84)}
+.toolbar{border-radius:24px;padding:20px 24px;margin-bottom:16px;background:rgba(255,255,255,.84)}
 .segmented label{border-radius:14px;min-height:42px;padding:0 16px}
 .quick-copy,.account-card,.info-card{border-radius:24px;background:rgba(255,255,255,.9)}
 .quick-copy{padding:24px 24px 22px;margin-bottom:16px}
@@ -1339,7 +1339,7 @@ h1{
   justify-content:space-between!important;
   gap:12px!important;
   margin:0 0 20px!important;
-  padding:12px!important;
+  padding:20px 24px!important;
   background:rgba(255,255,255,.72)!important;
   border-color:#dce8f7!important;
 }
@@ -1811,4 +1811,8 @@ td.site{
 }
 #accountGroups .favorite-cell .star-btn:hover{
   transform:none!important;
+}
+/* v38 targeted fix: toolbar inner spacing */
+.toolbar{
+  padding:20px 24px!important;
 }
