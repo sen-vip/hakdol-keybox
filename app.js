@@ -655,6 +655,12 @@ function badgeText(name) {
   }
   return out || raw[0] || "?";
 }
+function infoRowMatchesSearch(label, value, term) {
+  if (!term) return true;
+  const haystack = normalizeSearchText([label, value].join(" "));
+  return haystack.includes(normalizeSearchText(term));
+}
+
 function normalizeInfoSchema() {
   const rows = state.info.school || [];
   const next = [];
@@ -720,13 +726,26 @@ function renderInfoCards() {
   document.getElementById("infoCards").innerHTML = cards.map(([key, title, rows, span, anchorId]) => {
     const deleting = !!deleteMode.info[key];
     const visualClass = key === "card" ? "info-pay" : `info-${key}`;
-    const gridBody = key === "school" ? renderSchoolGrid(rows, deleting) : renderInfoRows(key, rows, deleting);
+
+    // 검색 필터링: 검색어가 있으면 해당 행만 표시
+    const filteredRows = accountSearchTerm
+      ? rows.filter(([label, value]) => infoRowMatchesSearch(label, value, accountSearchTerm))
+      : rows;
+
+    const noResultHtml = accountSearchTerm && filteredRows.length === 0
+      ? `<div class="section-no-result">이 섹션에는 검색 결과가 없습니다.</div>`
+      : "";
+
+    const gridBody = filteredRows.length > 0
+      ? (key === "school" ? renderSchoolGrid(filteredRows, deleting) : renderInfoRows(key, filteredRows, deleting))
+      : "";
+
     return `
     <article id="${esc(anchorId)}" class="info-card ${visualClass} ${span} ${deleting ? 'delete-mode' : ''}">
       <div class="info-card-head no-print-control">
         <div>
           <h2>${esc(title)}</h2>
-          <p class="info-sub">${rows.length}개 항목</p>
+          <p class="info-sub">${accountSearchTerm ? `${filteredRows.length} / ${rows.length}개 항목` : `${rows.length}개 항목`}</p>
         </div>
         <div class="mini-actions no-print">
           <button class="small-btn add-inline" onclick="addInfoRow('${esc(key)}')">+ 행 추가</button>
@@ -734,7 +753,7 @@ function renderInfoCards() {
         </div>
       </div>
       <div class="info-grid ${key === 'school' ? 'school-grid' : ''}">
-        ${gridBody}
+        ${gridBody}${noResultHtml}
       </div>
     </article>`;
   }).join("");
@@ -750,10 +769,27 @@ function quickSiteLabel(name) {
 function renderQuickAccounts(filteredCount) {
   const el = document.getElementById("quickAccounts");
   if (!el) return;
-  const quick = getQuickAccounts();
+  const allQuick = getQuickAccounts();
+
+  // 검색어가 있으면 빠른복사도 필터링
+  const quick = accountSearchTerm
+    ? allQuick.filter(item => accountMatchesSearch(item, accountSearchTerm))
+    : allQuick;
+
   const countEl = document.getElementById("quickCount");
-  if (countEl) countEl.textContent = `${quick.length}개 항목`;
-  el.innerHTML = quick.length ? quick.map(item => `
+  if (countEl) countEl.textContent = accountSearchTerm
+    ? `${quick.length} / ${allQuick.length}개 항목`
+    : `${allQuick.length}개 항목`;
+
+  if (allQuick.length === 0) {
+    el.innerHTML = `<div class="empty-mini">빠른복사로 보여줄 공용계정이 아직 없어요.</div>`;
+    return;
+  }
+  if (accountSearchTerm && quick.length === 0) {
+    el.innerHTML = `<div class="empty-mini section-no-result">이 섹션에는 검색 결과가 없습니다.</div>`;
+    return;
+  }
+  el.innerHTML = quick.map(item => `
     <article class="quick-item">
       <button class="quick-star on" onclick="toggleFavorite(${item.idx})" title="빠른복사에서 빼기" type="button">★</button>
 
@@ -767,7 +803,37 @@ function renderQuickAccounts(filteredCount) {
         <button class="copy-btn" onclick="copyAccountField(${item.idx}, 'password')">PW</button>
       </div>
     </article>
-  `).join("") : `<div class="empty-mini">빠른복사로 보여줄 공용계정이 아직 없어요.</div>`;
+  `).join("");
+}
+
+function updateSearchResultInfo(filteredCount, totalCount) {
+  const infoEl = document.getElementById("searchResultInfo");
+  if (!infoEl) return;
+  if (!accountSearchTerm) {
+    infoEl.textContent = "";
+    infoEl.className = "search-result-info";
+    return;
+  }
+  if (filteredCount === 0) {
+    infoEl.innerHTML = `"${esc(accountSearchTerm)}"에 대한 검색 결과가 없습니다.<br><span class="search-hint">검색어를 줄이거나 다른 단어로 검색해보세요.</span>`;
+    infoEl.className = "search-result-info no-result";
+  } else {
+    infoEl.textContent = `"${accountSearchTerm}" 검색 결과 ${filteredCount}개`;
+    infoEl.className = "search-result-info has-result";
+  }
+}
+
+function updateClearBtnState() {
+  const clearBtn = document.getElementById("clearSearchBtn");
+  const xBtn = document.getElementById("searchXBtn");
+  const hasValue = !!accountSearchTerm;
+  if (clearBtn) {
+    clearBtn.disabled = !hasValue;
+    clearBtn.classList.toggle("disabled", !hasValue);
+  }
+  if (xBtn) {
+    xBtn.classList.toggle("dimmed", !hasValue);
+  }
 }
 
 function renderAccounts() {
@@ -779,6 +845,8 @@ function renderAccounts() {
     ? `${filteredAccounts.length} / ${state.accounts.length}개 항목`
     : `${state.accounts.length}개 항목`;
   renderQuickAccounts(filteredAccounts.length);
+  updateSearchResultInfo(filteredAccounts.length, state.accounts.length);
+  updateClearBtnState();
 
   const deleting = !!deleteMode.account.__all__;
   const showMove = !accountSearchTerm && !deleting;
@@ -816,7 +884,10 @@ function renderAccounts() {
         </tbody>
       </table>
     </div>`;
-  document.getElementById("accountGroups").innerHTML = filteredAccounts.length ? html : `<div class="empty">검색 결과가 없습니다.</div>`;
+  document.getElementById("accountGroups").innerHTML = filteredAccounts.length ? html
+    : accountSearchTerm
+      ? `<div class="empty section-no-result">이 섹션에는 검색 결과가 없습니다.</div>`
+      : `<div class="empty">등록된 사이트 계정이 없어요.</div>`;
   resizeMemoAreas();
 }
 
@@ -1014,7 +1085,7 @@ function handleUpload(file) {
 
 function saveLocal() { syncInputs(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); showToast("이 PC 브라우저에 저장했어요."); }
 function loadLocal() { const raw=localStorage.getItem(STORAGE_KEY); if (!raw) return showToast("저장된 내용이 없어요."); state=JSON.parse(raw); state.accounts = normalizeAccountDefaults(state.accounts); deleteMode = { info: {}, account: {} }; render(); showToast("저장 내용을 불러왔어요."); }
-function resetAll() { if (!confirm("기본값으로 초기화할까요?")) return; state={info:structuredClone(DEFAULT_INFO), accounts:normalizeAccountDefaults(structuredClone(DEFAULT_ACCOUNTS))}; deleteMode = { info: {}, account: {} }; render(); showToast("초기화했어요."); }
+function resetAll() { if (!confirm("이 PC에 저장된 모든 정보를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.")) return; state={info:structuredClone(DEFAULT_INFO), accounts:normalizeAccountDefaults(structuredClone(DEFAULT_ACCOUNTS))}; deleteMode = { info: {}, account: {} }; render(); showToast("초기화했어요."); }
 function backupJson() {
   syncInputs();
   const payload = {
@@ -1148,8 +1219,24 @@ if (jsonLoadInput) jsonLoadInput.onchange = e => loadJsonFile(e.target.files?.[0
 document.getElementById("printBtn").onclick = () => { syncInputs(); render(); setTimeout(() => window.print(), 50); };
 document.getElementById("resetBtn").onclick = resetAll;
 const accountSearchEl = document.getElementById("accountSearch");
-if (accountSearchEl) accountSearchEl.oninput = e => { accountSearchTerm = e.target.value; renderAccounts(); };
+if (accountSearchEl) accountSearchEl.oninput = e => { accountSearchTerm = e.target.value; renderAccounts(); renderInfoCards(); };
+
+// 검색 지우기 버튼: 검색어만 삭제, 저장 데이터 건드리지 않음
 const clearSearchBtn = document.getElementById("clearSearchBtn");
-if (clearSearchBtn) clearSearchBtn.onclick = () => { accountSearchTerm = ""; if (accountSearchEl) accountSearchEl.value = ""; renderAccounts(); };
+if (clearSearchBtn) clearSearchBtn.onclick = () => {
+  accountSearchTerm = "";
+  if (accountSearchEl) accountSearchEl.value = "";
+  renderAccounts();
+  renderInfoCards();
+};
+
+// X버튼: 검색어만 삭제, 저장 데이터 건드리지 않음
+const searchXBtn = document.getElementById("searchXBtn");
+if (searchXBtn) searchXBtn.onclick = () => {
+  accountSearchTerm = "";
+  if (accountSearchEl) accountSearchEl.value = "";
+  renderAccounts();
+  renderInfoCards();
+};
 document.querySelectorAll("input[name='pwMode']").forEach(el => el.onchange = e => { pwMode=e.target.value; render(); });
 render();

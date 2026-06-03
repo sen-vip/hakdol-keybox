@@ -15,12 +15,13 @@
         <span class="top-brand-title">우리학교 키박스</span>
       </a>
 
-      <nav class="top-menu" aria-label="주요 섹션 이동">
-        <a href="#searchArea" class="home-link">⌂ 홈</a>
-        <a href="#siteSection">🌐 사이트 계정</a>
-        <a href="#schoolInfo">🏫 학교 정보</a>
-        <a href="#bankInfo">🏦 은행 계좌</a>
-        <a href="#cardInfo">💳 결제 수단</a>
+      <!-- section-nav: 필터가 아닌 페이지 내 섹션 바로가기 링크 -->
+      <nav class="top-menu" aria-label="주요 섹션 바로가기">
+        <a href="#searchArea" class="home-link" title="검색 영역으로 이동" aria-label="홈(검색 영역)으로 이동">⌂ 홈</a>
+        <a href="#siteSection" title="사이트 계정 위치로 이동" aria-label="사이트 계정 위치로 이동">🌐 사이트 계정</a>
+        <a href="#schoolInfo" title="학교 정보 위치로 이동" aria-label="학교 정보 위치로 이동">🏫 학교 정보</a>
+        <a href="#bankInfo" title="은행 계좌 위치로 이동" aria-label="은행 계좌 위치로 이동">🏦 은행 계좌</a>
+        <a href="#cardInfo" title="결제 수단 위치로 이동" aria-label="결제 수단 위치로 이동">💳 결제 수단</a>
       </nav>
 
       <a class="top-github" href="https://github.com/sen-vip/hakdol-keybox" target="_blank" rel="noopener">GitHub</a>
@@ -47,9 +48,11 @@
     <section id="searchArea" class="search-panel no-print">
       <div class="search-box">
         <span class="search-symbol">⌕</span>
-        <input id="accountSearch" class="account-search" type="search" placeholder="사이트명, ID, 메모, 계좌명을 검색해보세요" autocomplete="off" />
-        <button id="clearSearchBtn" class="small-btn search-clear" type="button">검색 초기화</button>
+        <input id="accountSearch" class="account-search" type="text" placeholder="사이트명, ID, 메모, 계좌명을 검색해보세요" autocomplete="off" />
+        <button id="searchXBtn" class="search-x-btn" type="button" aria-label="검색어 지우기" title="검색어 지우기">✕</button>
+        <button id="clearSearchBtn" class="small-btn search-clear" type="button">검색 지우기</button>
       </div>
+      <div id="searchResultInfo" class="search-result-info" aria-live="polite"></div>
     </section>
 
     <section class="toolbar no-print" aria-label="관리 도구">
@@ -73,7 +76,7 @@
           JSON 불러오기
           <input id="jsonLoadInput" type="file" accept=".json,application/json" hidden />
         </label>
-        <button id="resetBtn" class="btn danger">초기화</button>
+        <button id="resetBtn" class="btn danger">저장정보 초기화</button>
       </div>
     </section>
 
