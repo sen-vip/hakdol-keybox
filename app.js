@@ -675,38 +675,52 @@ function normalizeInfoSchema() {
 function renderInfoCards() {
   normalizeInfoSchema();
   const cards = [
-    ["school", "학교 공통정보", state.info.school, "wide", "schoolInfo"],
-    ["bank", "은행 계좌정보", state.info.bank, "half", "bankInfo"],
-    ["card", "결제 수단", state.info.card, "half", "cardInfo"]
+    ["school", "🏫 학교 정보", state.info.school, "wide", "schoolInfo"],
+    ["bank", "🏦 은행 계좌 정보", state.info.bank, "half", "bankInfo"],
+    ["card", "💳 결제 수단", state.info.card, "half", "cardInfo"]
   ];
 
-  const dividerMap = {
-    school: new Set([4, 7, 11])
-  };
+  function renderInfoRow(key, label, value, idx, deleting) {
+    return `
+      <div class="info-row editable-row ${deleting ? 'selecting' : ''}">
+        ${deleting ? `<label class="select-cell no-print"><input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" aria-label="삭제할 행 선택" /></label>` : ''}
+        <input class="label-input" title="${esc(label)}" value="${esc(label)}" data-info-label-key="${esc(key)}" data-info-idx="${idx}" aria-label="항목명 입력" />
+        <div class="copy-cell info-copy-cell">
+          <input class="inline-input" title="${esc(displayInfoValue(label, value))}" type="${inputTypeForLabel(label)}" value="${esc(value)}" data-info-key="${esc(key)}" data-info-idx="${idx}" aria-label="${esc(label)} 값 입력" />
+          <button class="copy-pill copy-icon-only no-print" onclick="copyText(document.querySelector('[data-info-key=${esc(key)}][data-info-idx=\\'${idx}\\']').value, '${esc(label)}')" type="button" title="복사하기" aria-label="${esc(label)} 복사">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M5 15V7a2 2 0 0 1 2-2h8"></path></svg>
+          </button>
+        </div>
+      </div>
+    `;
+  }
 
   function renderInfoRows(key, rows, deleting) {
-    const pieces = [];
-    rows.forEach(([label, value], idx) => {
-      if (dividerMap[key]?.has(idx)) pieces.push('<div class="info-divider" aria-hidden="true"></div>');
-      pieces.push(`
-        <div class="info-row editable-row ${deleting ? 'selecting' : ''}">
-          ${deleting ? `<label class="select-cell no-print"><input type="checkbox" data-info-select="${esc(key)}" data-idx="${idx}" aria-label="삭제할 행 선택" /></label>` : ''}
-          <input class="label-input" title="${esc(label)}" value="${esc(label)}" data-info-label-key="${esc(key)}" data-info-idx="${idx}" aria-label="항목명 입력" />
-          <div class="copy-cell info-copy-cell">
-            <input class="inline-input" title="${esc(displayInfoValue(label, value))}" type="${inputTypeForLabel(label)}" value="${esc(value)}" data-info-key="${esc(key)}" data-info-idx="${idx}" aria-label="${esc(label)} 값 입력" />
-            <button class="copy-pill copy-icon-only no-print" onclick="copyText(document.querySelector('[data-info-key=${esc(key)}][data-info-idx=\\'${idx}\\']').value, '${esc(label)}')" type="button" title="복사하기" aria-label="${esc(label)} 복사">
-              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M5 15V7a2 2 0 0 1 2-2h8"></path></svg>
-            </button>
-          </div>
-        </div>
-      `);
-    });
-    return pieces.join("");
+    return rows.map(([label, value], idx) => renderInfoRow(key, label, value, idx, deleting)).join("");
+  }
+
+  function renderSchoolGrid(rows, deleting) {
+    const left = rows.slice(0, 7).map(([label, value], idx) => renderInfoRow("school", label, value, idx, deleting)).join("");
+    const right = rows.slice(7, 14).map(([label, value], localIdx) => {
+      const idx = localIdx + 7;
+      return renderInfoRow("school", label, value, idx, deleting);
+    }).join("");
+    const extra = rows.slice(14).map(([label, value], localIdx) => {
+      const idx = localIdx + 14;
+      return renderInfoRow("school", label, value, idx, deleting);
+    }).join("");
+
+    return `
+      <div class="school-column school-column-left">${left}</div>
+      <div class="school-column school-column-right">${right}</div>
+      ${extra ? `<div class="school-extra">${extra}</div>` : ""}
+    `;
   }
 
   document.getElementById("infoCards").innerHTML = cards.map(([key, title, rows, span, anchorId]) => {
     const deleting = !!deleteMode.info[key];
     const visualClass = key === "card" ? "info-pay" : `info-${key}`;
+    const gridBody = key === "school" ? renderSchoolGrid(rows, deleting) : renderInfoRows(key, rows, deleting);
     return `
     <article id="${esc(anchorId)}" class="info-card ${visualClass} ${span} ${deleting ? 'delete-mode' : ''}">
       <div class="info-card-head no-print-control">
@@ -720,7 +734,7 @@ function renderInfoCards() {
         </div>
       </div>
       <div class="info-grid ${key === 'school' ? 'school-grid' : ''}">
-        ${renderInfoRows(key, rows, deleting)}
+        ${gridBody}
       </div>
     </article>`;
   }).join("");
@@ -728,9 +742,9 @@ function renderInfoCards() {
 
 function quickSiteLabel(name) {
   const text = String(name || "").trim();
-  if (text.length <= 10) return text;
-  const cut = text.slice(0, 7).replace(/[\s(（]+$/g, "");
-  return `${cut}(...)`;
+  if (text.length <= 9) return text;
+  const cut = text.slice(0, 8).replace(/[\s(（]+$/g, "");
+  return `${cut}...`;
 }
 
 function renderQuickAccounts(filteredCount) {
@@ -741,7 +755,7 @@ function renderQuickAccounts(filteredCount) {
   if (countEl) countEl.textContent = `${quick.length}개 항목`;
   el.innerHTML = quick.length ? quick.map(item => `
     <article class="quick-item">
-      <button class="quick-star" onclick="toggleFavorite(${item.idx})" title="빠른복사에서 빼기" type="button">☆</button>
+      <button class="quick-star on" onclick="toggleFavorite(${item.idx})" title="빠른복사에서 빼기" type="button">★</button>
 
       <div class="site-label">
         <span class="site-badge">${esc(badgeText(item.site))}</span>
@@ -773,8 +787,8 @@ function renderAccounts() {
       <table>
         <colgroup>
           ${deleting ? '<col class="no-print" style="width:42px">' : ''}
-          <col class="no-print" style="width:58px">
-          <col style="width:38%"><col style="width:27%"><col style="width:27%">
+          <col class="no-print favorite-col" style="width:32px">
+          <col style="width:42%"><col style="width:29%"><col style="width:29%">
           ${showMove ? '<col class="no-print" style="width:56px">' : ''}
         </colgroup>
         <thead><tr>${deleting ? '<th class="no-print"></th>' : ''}<th class="no-print"></th><th>사이트명</th><th>아이디</th><th>비밀번호</th>${showMove ? '<th class="no-print">이동</th>' : ''}</tr></thead>
@@ -791,7 +805,7 @@ function renderAccounts() {
                       <input class="table-input site-input" title="${esc(item.site)}" value="${esc(item.site)}" data-account-idx="${item.idx}" data-field="site" aria-label="사이트명 입력" />
                       ${String(item.url || "").trim() ? `<button class="open-url-btn no-print" onclick="openAccountUrl(${item.idx})" title="사이트 열기" type="button">↗ 열기</button>` : ""}
                     </div>
-                    <input class="table-input memo-sub" title="${esc(item.memo)}" value="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" />
+                    <textarea class="table-input memo-sub" title="${esc(item.memo)}" data-account-idx="${item.idx}" data-field="memo" aria-label="메모 입력" rows="1" placeholder="메모">${esc(item.memo)}</textarea>
                   </div>
                 </div>
               </td>
@@ -803,6 +817,17 @@ function renderAccounts() {
       </table>
     </div>`;
   document.getElementById("accountGroups").innerHTML = filteredAccounts.length ? html : `<div class="empty">검색 결과가 없습니다.</div>`;
+  resizeMemoAreas();
+}
+
+function resizeMemoArea(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+}
+
+function resizeMemoAreas() {
+  document.querySelectorAll("textarea.memo-sub").forEach(resizeMemoArea);
 }
 
 function render() { renderAccounts(); renderInfoCards(); }
@@ -828,7 +853,10 @@ function updateFromInput(target) {
 }
 
 document.addEventListener("input", e => {
-  if (e.target.matches(".inline-input, .table-input, .label-input")) updateFromInput(e.target);
+  if (e.target.matches(".inline-input, .table-input, .label-input")) {
+    updateFromInput(e.target);
+    if (e.target.matches("textarea.memo-sub")) resizeMemoArea(e.target);
+  }
 });
 
 function syncInputs() { document.querySelectorAll(".inline-input, .table-input, .label-input").forEach(updateFromInput); }
@@ -907,7 +935,7 @@ async function downloadTemplate() {
   // 기본 입력파일은 현재 JS에서 직접 생성합니다. URL 칸까지 포함되어 있어 사용자가 엑셀에서 관리하기 쉽습니다.
   const wb = XLSX.utils.book_new();
     const infoRows = [["구분", "항목", "값"]];
-    for (const [key, label] of [["school","학교 공통 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
+    for (const [key, label] of [["school","학교 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
       state.info[key].forEach(([name, value]) => infoRows.push([label, name, value]));
     }
     const inputRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
@@ -987,6 +1015,36 @@ function handleUpload(file) {
 function saveLocal() { syncInputs(); localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); showToast("이 PC 브라우저에 저장했어요."); }
 function loadLocal() { const raw=localStorage.getItem(STORAGE_KEY); if (!raw) return showToast("저장된 내용이 없어요."); state=JSON.parse(raw); state.accounts = normalizeAccountDefaults(state.accounts); deleteMode = { info: {}, account: {} }; render(); showToast("저장 내용을 불러왔어요."); }
 function resetAll() { if (!confirm("기본값으로 초기화할까요?")) return; state={info:structuredClone(DEFAULT_INFO), accounts:normalizeAccountDefaults(structuredClone(DEFAULT_ACCOUNTS))}; deleteMode = { info: {}, account: {} }; render(); showToast("초기화했어요."); }
+function backupJson() {
+  syncInputs();
+  const payload = {
+    app: "우리학교 키박스",
+    version: "v3.0",
+    exportedAt: new Date().toISOString(),
+    data: state
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json;charset=utf-8"});
+  saveAs(blob, `우리학교-키박스-백업-${new Date().toISOString().slice(0,10)}.json`);
+  showToast("JSON 백업 파일을 만들었어요.");
+}
+async function loadJsonFile(file) {
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const data = parsed.data || parsed;
+    if (!data || !Array.isArray(data.accounts) || !data.info) throw new Error("invalid");
+    state = {
+      info: data.info,
+      accounts: normalizeAccountDefaults(data.accounts)
+    };
+    deleteMode = { info: {}, account: {} };
+    render();
+    showToast("JSON 백업을 불러왔어요. 보관하려면 이 PC에 저장을 눌러주세요.");
+  } catch (err) {
+    showToast("JSON 파일을 불러오지 못했어요.");
+  }
+}
 
 async function exportPrettyExcel() {
   syncInputs();
@@ -996,9 +1054,9 @@ async function exportPrettyExcel() {
   for (let r=1; r<=120; r++) for (let c=1; c<=9; c++) {
     const cell=ws.getCell(r,c); cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF3F5F7"}}; cell.font={name:"맑은 고딕",size:10,color:{argb:"FF202632"}};
   }
-  ws.mergeCells("B2:F2"); ws.getCell("B2").value="학교계정 ID.PW 모음"; ws.getCell("B2").font={name:"맑은 고딕",size:20,bold:true,color:{argb:"FF202632"}};
+  ws.mergeCells("B2:F2"); ws.getCell("B2").value="학교계정 ID·PW 모음"; ws.getCell("B2").font={name:"맑은 고딕",size:20,bold:true,color:{argb:"FF202632"}};
   ws.getCell("I2").value="출력일: " + new Date().toISOString().slice(0,10); ws.getCell("I2").alignment={horizontal:"right"}; ws.getCell("I2").font={name:"맑은 고딕",size:10,color:{argb:"FF8D98A8"}};
-  makeExcelCard(ws, 4, 2, "학교 공통정보", state.info.school, 14);
+  makeExcelCard(ws, 4, 2, "학교 정보", state.info.school, 14);
   makeExcelCard(ws, 4, 5, "🪙 은행. 계좌정보", state.info.bank, 14);
   makeExcelCard(ws, 4, 8, "결제 수단", state.info.card, 14);
   let row = 20;
@@ -1045,7 +1103,7 @@ function exportBasicExcel() {
   syncInputs();
   const wb = XLSX.utils.book_new();
   const infoRows = [["구분", "항목", "값"]];
-  for (const [key, label] of [["school","학교 공통 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
+  for (const [key, label] of [["school","학교 정보"],["bank","은행 계좌 정보"],["card","결제 수단"]]) {
     (state.info[key] || []).forEach(([name, value]) => infoRows.push([label, name, value]));
   }
   const accountRows = [["사이트명", "아이디", "비밀번호", "메모", "URL", "즐겨찾기"]];
@@ -1060,6 +1118,13 @@ function exportBasicExcel() {
   showToast("현재 내용을 기본 입력파일 형식으로 다운로드했어요.");
 }
 
+
+if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+window.addEventListener("load", () => {
+  if (!window.location.hash) {
+    window.scrollTo(0, 0);
+  }
+});
 
 const scrollTopBtn = document.getElementById("scrollTopBtn");
 if (scrollTopBtn) {
@@ -1076,6 +1141,10 @@ document.getElementById("uploadInput").onchange = e => e.target.files[0] && hand
 document.getElementById("saveBtn").onclick = saveLocal;
 document.getElementById("loadSavedBtn").onclick = loadLocal;
 document.getElementById("exportExcelBtn").onclick = exportBasicExcel;
+const jsonBackupBtn = document.getElementById("jsonBackupBtn");
+if (jsonBackupBtn) jsonBackupBtn.onclick = backupJson;
+const jsonLoadInput = document.getElementById("jsonLoadInput");
+if (jsonLoadInput) jsonLoadInput.onchange = e => loadJsonFile(e.target.files?.[0]);
 document.getElementById("printBtn").onclick = () => { syncInputs(); render(); setTimeout(() => window.print(), 50); };
 document.getElementById("resetBtn").onclick = resetAll;
 const accountSearchEl = document.getElementById("accountSearch");
