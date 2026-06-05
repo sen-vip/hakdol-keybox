@@ -1,3 +1,4 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css");
 /* ============================================================
    우리학교 키박스 v3.0 — 통합 정리본
    기능/디자인 동일. 누적된 버전별 덮어쓰기를 최종 상태로 통합
@@ -35,7 +36,7 @@ html{
 }
 body{
   margin:0;
-  font-family:"SUIT","SUIT Variable","Pretendard",-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",Arial,sans-serif;
+  font-family:"Pretendard","SUIT","SUIT Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",Arial,sans-serif;
   color:var(--text);
   background:
     radial-gradient(circle at 90% 2%, rgba(219,234,254,.68), transparent 25%),
@@ -799,7 +800,7 @@ tr:hover td{background:#fcfdff}
   color:#172033;
   border-radius:10px;
   padding:7px 8px;
-  font-family:"SUIT","SUIT Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
+  font-family:"Pretendard","SUIT","SUIT Variable",-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic",sans-serif;
   font-weight:500;
   transition:border-color .14s ease,box-shadow .14s ease,background .14s ease;
 }
@@ -824,7 +825,7 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
   overflow:hidden;
   white-space:pre-wrap;
   color:#64748b;
-  font-family:"Pretendard","SUIT","Malgun Gothic",sans-serif;
+  font-family:"Pretendard","SUIT","SUIT Variable","Malgun Gothic",sans-serif;
   font-size:13px;
   font-weight:500;
   line-height:1.45;
@@ -1057,6 +1058,513 @@ textarea.memo-sub{
 }
 .scroll-top-btn.show{opacity:1;pointer-events:auto;transform:translateY(0)}
 .scroll-top-btn:hover{background:var(--blue);border-color:var(--blue);color:#fff}
+
+
+
+/* ============================================================
+   Modern visual refresh — CSS only
+   폰트 굵기, 카드 무게, 그림자, 색면을 가볍게 정리
+   ============================================================ */
+:root{
+  --bg:#f8fafc;
+  --surface:#ffffff;
+  --surface-soft:#f9fbff;
+  --text:#111827;
+  --sub:#5f6f84;
+  --muted:#9aa8ba;
+  --line:#e5edf6;
+  --line-soft:#f1f5f9;
+  --blue:#3867d6;
+  --blue-dark:#2854bd;
+  --blue-soft:#f5f8ff;
+  --green:#22a35a;
+  --green-soft:#f6fdf8;
+  --shadow:0 10px 26px rgba(15,23,42,.035);
+  --shadow-soft:0 5px 14px rgba(15,23,42,.025);
+}
+
+body{
+  background:#f8fafc;
+  font-weight:400;
+  letter-spacing:-.015em;
+}
+
+.top-nav{
+  background:rgba(255,255,255,.88);
+  border-bottom-color:#edf2f7;
+  box-shadow:0 4px 14px rgba(15,23,42,.025);
+}
+.top-brand-title{font-weight:700;letter-spacing:-.04em}
+.top-brand-icon{
+  background:#f5f8ff;
+  border-color:#e2edff;
+  box-shadow:none;
+}
+.top-menu a,.top-github{
+  font-weight:560;
+  color:#5f6f84;
+}
+.top-menu a:hover,.top-menu a.home-link{
+  background:#f7faff;
+  border-color:#e3edff;
+}
+
+h1{font-weight:760;letter-spacing:-.055em;color:#172033}
+.desc{font-weight:430;color:#64748b}
+.version-line{font-weight:500}
+.trust-badge{
+  font-weight:500;
+  background:#fff;
+  border-color:#e8eef6;
+  box-shadow:none;
+}
+
+.btn,.small-btn{
+  font-weight:560;
+  box-shadow:none!important;
+}
+.btn:hover,.small-btn:hover{transform:none}
+.btn.soft,.small-btn{
+  border-color:#e4ebf3;
+  color:#475569;
+}
+.btn.save-pc,.btn.excel,.btn.excel-download{
+  box-shadow:0 6px 14px rgba(37,99,235,.09)!important;
+}
+.btn.excel,.btn.excel-download{box-shadow:0 6px 14px rgba(22,163,74,.08)!important}
+
+.search-box{
+  border:1px solid #d8e6ff;
+  background:#fff;
+  box-shadow:0 8px 22px rgba(37,99,235,.055);
+}
+.search-box:hover{
+  border-color:#c9dcff;
+  box-shadow:0 9px 24px rgba(37,99,235,.07);
+}
+.search-box:focus-within{
+  border-color:#8fb5ff;
+  box-shadow:0 0 0 4px rgba(59,130,246,.09),0 10px 26px rgba(37,99,235,.07);
+}
+.search-symbol{
+  background:#f3f7ff;
+  box-shadow:none;
+  font-weight:600;
+}
+.account-search{font-weight:450}
+.search-result-info,.section-no-result{font-weight:500}
+
+.toolbar,.quick-copy,.account-card,.info-card{
+  background:#fff;
+  border-color:#e5edf6;
+  box-shadow:var(--shadow-soft);
+}
+.toolbar{border-radius:22px}
+.segmented,.segmented label{font-weight:500}
+.segmented label{border-color:#e8eef6}
+.quick-copy-head strong{
+  font-weight:700;
+  letter-spacing:-.045em;
+}
+.quick-copy-head span{font-weight:450;color:#64748b}
+.count-badge{font-weight:600;background:#f4f8ff}
+.quick-item{
+  border-color:#e5edf6;
+  box-shadow:none;
+}
+.quick-item:hover{
+  border-color:#d4e3f7;
+  box-shadow:0 6px 18px rgba(37,99,235,.04);
+}
+.quick-item strong{font-weight:600}
+.site-badge{
+  background:#f5f8ff;
+  border-color:#e3edff;
+  color:#426488;
+  font-weight:650;
+}
+
+.copy-btn,.copy-chip,.copy-pill{
+  font-weight:600;
+  background:#6f90dd;
+  border-color:#6f90dd;
+  box-shadow:none;
+}
+.empty,.empty-mini{font-weight:500;background:#fbfcfe;border-color:#dbe4ee}
+
+.main-account-card{
+  background:#fff;
+  border-color:#e5edf6;
+}
+.section-title h2,.info-card h2{
+  font-weight:700;
+  letter-spacing:-.045em;
+  color:#172033;
+}
+.section-desc,.info-sub,.account-title-side p{
+  font-weight:430;
+  color:#64748b;
+}
+.flat-table{border-color:#e5edf6;background:#fff}
+th{
+  background:#fbfcfe;
+  color:#64748b;
+  font-weight:560;
+}
+td{font-weight:400}
+tr:hover td{background:#fbfdff}
+
+.table-input,.inline-input,.label-input,.memo-sub{
+  font-weight:430;
+  letter-spacing:-.015em;
+}
+.table-input:focus,.inline-input:focus,.label-input:focus,
+tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input{
+  border-color:#dbeafe;
+  box-shadow:0 0 0 3px rgba(59,130,246,.06);
+}
+.site-input{font-weight:560}
+.memo-sub{font-weight:400;color:#6b7b90}
+.open-url-btn{
+  font-weight:560;
+  color:#748298;
+  border-radius:999px;
+  padding:4px 7px;
+}
+.open-url-btn:hover{background:#f4f8ff;color:#3867d6}
+.star-btn,.quick-star,.drag-handle{opacity:.72;text-shadow:none!important}
+
+.info-card{background:#fff!important;border-color:#e5edf6!important}
+.info-school,.info-bank,.info-pay{
+  background:#fff!important;
+  border-color:#e5edf6!important;
+}
+.info-row{border-bottom-color:#f0f4f8}
+.label-input{font-weight:430;color:#6b7b90}
+.inline-input{font-weight:430;color:#172033}
+.copy-pill.copy-icon-only:hover{background:#f5f8ff}
+
+.app-footer{font-weight:400;color:#a0adbd}
+.toast{font-weight:600;box-shadow:0 10px 24px rgba(15,23,42,.12)}
+.scroll-top-btn{box-shadow:0 6px 18px rgba(15,23,42,.06)}
+
+
+
+/* ============================================================
+   Toss-like airy refresh — CSS only
+   더 가볍고 현대적인 업무도구 톤으로 최종 정리
+   ============================================================ */
+:root{
+  --bg:#f7f8fa;
+  --surface:#ffffff;
+  --surface-soft:#fbfcfe;
+  --text:#191f28;
+  --sub:#6b7684;
+  --muted:#9aa4b2;
+  --line:#edf1f5;
+  --line-soft:#f3f6f9;
+  --blue:#3182f6;
+  --blue-dark:#1b64da;
+  --blue-soft:#f4f8ff;
+  --green:#20b26b;
+  --green-soft:#f5fcf8;
+  --danger:#e5484d;
+  --danger-soft:#fff6f6;
+  --dark:#202632;
+  --shadow:0 4px 14px rgba(20,32,54,.035);
+  --shadow-soft:0 2px 8px rgba(20,32,54,.028);
+}
+
+body{
+  background:#f7f8fa;
+  color:var(--text);
+  font-weight:400;
+  letter-spacing:-.012em;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+
+.app{margin-top:24px}
+
+.top-nav{
+  background:rgba(255,255,255,.86);
+  border-bottom-color:rgba(237,241,245,.9);
+  box-shadow:none;
+}
+.top-nav-inner{min-height:62px}
+.top-brand{gap:10px;color:#191f28}
+.top-brand-icon{
+  width:32px;
+  height:32px;
+  border-radius:12px;
+  background:#f4f8ff;
+  border-color:#e7f0ff;
+  box-shadow:none;
+}
+.top-brand-title{font-weight:650;letter-spacing:-.035em}
+.top-menu a,.top-github{
+  min-height:38px;
+  border-radius:12px;
+  color:#6b7684;
+  font-weight:500;
+  box-shadow:none;
+}
+.top-menu a:hover,.top-menu a.home-link,.top-github:hover{
+  background:#f7f9fc;
+  border-color:#edf1f5;
+  color:#3182f6;
+  transform:none;
+}
+
+.hero{padding:8px 2px 20px}
+h1{
+  color:#191f28;
+  font-weight:700;
+  letter-spacing:-.055em;
+}
+.desc{
+  color:#6b7684;
+  font-weight:400;
+}
+.trust-badge{
+  background:#fff;
+  border-color:#edf1f5;
+  color:#6b7684;
+  font-weight:450;
+  box-shadow:none;
+}
+.version-line{font-weight:400;color:#9aa4b2}
+
+.btn,.small-btn{
+  border-radius:14px;
+  font-weight:520;
+  letter-spacing:-.012em;
+  box-shadow:none!important;
+}
+.btn{min-height:42px}
+.small-btn{min-height:34px}
+.btn.soft,.small-btn{
+  background:#fff;
+  border-color:#edf1f5;
+  color:#4e5968;
+}
+.btn.soft:hover,.small-btn:hover{
+  background:#f8fafc;
+  border-color:#e5ebf2;
+}
+.btn.save-pc{
+  background:#3182f6;
+  border-color:#3182f6;
+  box-shadow:none!important;
+}
+.btn.save-pc:hover{background:#1b64da;border-color:#1b64da}
+.btn.dark{background:#202632;border-color:#202632}
+.btn.excel,.btn.excel-download{
+  background:#20b26b;
+  border-color:#20b26b;
+  box-shadow:none!important;
+}
+.btn.excel-upload{
+  color:#188552;
+  border-color:#d8f2e4;
+  background:#fff;
+  box-shadow:none!important;
+}
+.btn.excel-upload:hover{background:#f5fcf8;border-color:#c8ead8}
+
+.search-box{
+  min-height:56px;
+  border:1px solid #e4ecf7;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:none;
+}
+.search-box:hover{
+  border-color:#d7e5f7;
+  box-shadow:none;
+}
+.search-box:focus-within{
+  border-color:#b8d4ff;
+  box-shadow:0 0 0 4px rgba(49,130,246,.08);
+}
+.search-symbol{
+  width:32px;
+  height:32px;
+  background:#f4f8ff;
+  color:#3182f6;
+  font-size:22px;
+  font-weight:500;
+  box-shadow:none;
+}
+.account-search{
+  color:#191f28;
+  font-weight:400;
+  font-size:15px;
+}
+.account-search::placeholder{color:#a7b0bd}
+.search-x-btn{font-weight:400;color:#8b95a1}
+.search-result-info,.search-hint,.section-no-result{font-weight:400}
+
+.toolbar,.quick-copy,.account-card,.info-card{
+  background:#fff;
+  border:1px solid #edf1f5;
+  box-shadow:none;
+}
+.toolbar{
+  padding:18px 22px;
+  border-radius:26px;
+}
+.segmented,.segmented label{
+  font-weight:400;
+}
+.segmented label{
+  background:#fff;
+  border-color:#edf1f5;
+  border-radius:12px;
+}
+
+.quick-copy,.account-card,.info-card{border-radius:28px}
+.quick-copy{padding:23px 24px 22px}
+.quick-copy-head strong{
+  color:#191f28;
+  font-weight:650;
+}
+.quick-copy-head span{
+  color:#6b7684;
+  font-weight:400;
+}
+.count-badge{
+  background:#f4f8ff;
+  color:#3182f6;
+  font-weight:500;
+}
+.quick-grid{gap:13px}
+.quick-item{
+  background:#fff;
+  border-color:#edf1f5;
+  border-radius:18px;
+  box-shadow:none;
+}
+.quick-item:hover{
+  border-color:#dfe8f3;
+  box-shadow:none;
+}
+.quick-item strong{
+  color:#191f28;
+  font-weight:560;
+}
+.site-badge{
+  background:#f7f9fc;
+  border-color:#edf1f5;
+  color:#4e5968;
+  font-weight:560;
+}
+
+.copy-btn,.copy-chip,.copy-pill{
+  background:#edf4ff;
+  border-color:#edf4ff;
+  color:#1b64da;
+  border-radius:12px;
+  font-weight:560;
+  box-shadow:none;
+}
+.copy-btn:hover,.copy-chip:hover,.copy-pill:hover{
+  background:#e3efff;
+  border-color:#e3efff;
+  color:#1b64da;
+}
+.copy-btn:active,.copy-chip:active,.copy-pill:active{
+  background:#e6f8ef;
+  border-color:#e6f8ef;
+  color:#188552;
+}
+.copy-pill.copy-icon-only{
+  color:#8b95a1;
+}
+.copy-pill.copy-icon-only:hover{
+  background:#f4f8ff;
+  color:#3182f6;
+}
+
+.empty,.empty-mini{
+  background:#fbfcfe;
+  border-color:#e5ebf2;
+  color:#9aa4b2;
+  font-weight:400;
+}
+.main-account-card{
+  padding:23px;
+  background:#fff;
+  border-color:#edf1f5;
+}
+.section-title h2,.info-card h2{
+  color:#191f28;
+  font-weight:650;
+  letter-spacing:-.04em;
+}
+.section-desc,.info-sub,.account-title-side p{
+  color:#6b7684;
+  font-weight:400;
+}
+.flat-table{
+  border-color:#edf1f5;
+  border-radius:18px;
+}
+th,td{border-bottom-color:#f3f6f9}
+th{
+  background:#fbfcfe;
+  color:#6b7684;
+  font-weight:500;
+}
+td{color:#191f28;font-weight:400}
+tr:hover td{background:#fbfcfe}
+
+.table-input,.inline-input,.label-input,.memo-sub{
+  color:#191f28;
+  font-weight:400;
+  letter-spacing:-.012em;
+}
+.table-input:focus,.inline-input:focus,.label-input:focus,
+tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input{
+  background:#fff;
+  border-color:#d7e6ff;
+  box-shadow:0 0 0 3px rgba(49,130,246,.055);
+}
+.site-input{font-weight:520;color:#191f28}
+.memo-sub{color:#6b7684;font-weight:400}
+.label-input{color:#6b7684;font-weight:400}
+.inline-input{color:#191f28;font-weight:400}
+.open-url-btn{
+  color:#8b95a1;
+  font-weight:500;
+}
+.open-url-btn:hover{background:#f4f8ff;color:#3182f6}
+
+.star-btn,.quick-star,.drag-handle{
+  color:#b0bac7;
+  opacity:.78;
+}
+.star-btn.on,.quick-star.on{color:#f59e0b}
+
+.info-card{padding:20px;background:#fff!important;border-color:#edf1f5!important}
+.info-school,.info-bank,.info-pay{
+  background:#fff!important;
+  border-color:#edf1f5!important;
+}
+.info-row{border-bottom-color:#f3f6f9}
+.school-extra{border-top-color:#f3f6f9}
+
+.app-footer{font-weight:400;color:#a7b0bd}
+.toast{
+  font-weight:500;
+  border-radius:16px;
+  box-shadow:0 8px 20px rgba(20,32,54,.12);
+}
+.scroll-top-btn{
+  border-color:#edf1f5;
+  box-shadow:none;
+  font-weight:500;
+}
 
 /* ============================================================
    Responsive
