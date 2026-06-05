@@ -808,6 +808,11 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
   border-color:#bfdbfe;
   box-shadow:0 0 0 3px #eff6ff;
 }
+
+.table-input[data-field="id"],
+.table-input[data-field="password"]{
+  font-family:"Malgun Gothic","맑은 고딕",sans-serif;
+}
 .site-input{
   font-size:14px;
   font-weight:800;
