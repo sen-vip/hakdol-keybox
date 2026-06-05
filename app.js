@@ -96,6 +96,14 @@ const DEFAULT_ACCOUNTS = [
 ];
 
 // ============================================================
+// Deep cloning helper
+// 일부 브라우저(Safari ≤ 14 등)에서 structuredClone()을 지원하지 않을 수 있어
+// 존재 여부를 검사하고, 지원하지 않는 경우 JSON 직렬화/역직렬화 방식으로 대체합니다.
+const deepClone = typeof structuredClone === 'function'
+  ? (obj) => structuredClone(obj)
+  : (obj) => JSON.parse(JSON.stringify(obj));
+
+// ============================================================
 // 상태 관리
 // ============================================================
 function normalizeAccountDefaults(accounts) {
@@ -112,7 +120,7 @@ function normalizeAccountDefaults(accounts) {
     }));
 }
 
-let state = { info: structuredClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(structuredClone(DEFAULT_ACCOUNTS)) };
+let state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
 let pwMode = "plain";
 let deleteMode = { info: {}, account: {} };
 let draggedIndex = null;
@@ -649,7 +657,7 @@ async function downloadTemplate() {
 }
 
 function parseUploadedWorkbook(wb) {
-  let newInfo = structuredClone(DEFAULT_INFO);
+  let newInfo = deepClone(DEFAULT_INFO);
   let newAccounts = [];
   if (wb.SheetNames.includes("기본정보")) {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets["기본정보"], {header:1, defval:""});
@@ -659,7 +667,7 @@ function parseUploadedWorkbook(wb) {
       const key = g.includes("은행") ? "bank" : g.includes("결제") || g.includes("카드") ? "card" : "school";
       if (label) newInfo[key].push([String(label), String(value || "")]);
     });
-    for (const k of ["school","bank","card"]) if (!newInfo[k].length) newInfo[k] = structuredClone(DEFAULT_INFO[k]);
+    for (const k of ["school","bank","card"]) if (!newInfo[k].length) newInfo[k] = deepClone(DEFAULT_INFO[k]);
   }
   if (wb.SheetNames.includes("계정입력")) {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets["계정입력"], {header:1, defval:""});
@@ -709,14 +717,66 @@ function parseUploadedWorkbook(wb) {
       });
     });
   }
-  state = { info: newInfo, accounts: normalizeAccountDefaults(newAccounts.length ? newAccounts : structuredClone(DEFAULT_ACCOUNTS)) };
+  /*
+   * 엑셀 업로드 시 기존 데이터와 병합합니다.
+   * 동일한 사이트명과 아이디가 있는 경우 기존 항목을 업데이트하고,
+   * 없는 경우 새로 추가합니다. 또한 학교/은행/카드 정보는 같은 라벨이
+   * 존재하면 값을 갱신하고 없는 라벨은 추가합니다.
+   */
+  // 병합된 정보 객체 생성 (기존 state.info를 기반으로 복제)
+  const mergedInfo = deepClone(state.info || {});
+  for (const k of ["school","bank","card"]) {
+    const existingRows = Array.isArray(mergedInfo[k]) ? mergedInfo[k] : [];
+    const rowsToMerge = Array.isArray(newInfo[k]) ? newInfo[k] : [];
+    rowsToMerge.forEach(([label, value]) => {
+      const idx = existingRows.findIndex(([existingLabel]) => existingLabel === label);
+      if (idx >= 0) {
+        // 기존 라벨이 있으면 값만 업데이트
+        existingRows[idx][1] = value;
+      } else {
+        // 새 라벨이면 추가
+        existingRows.push([label, value]);
+      }
+    });
+    mergedInfo[k] = existingRows;
+  }
+  // 병합된 계정 목록 생성 (기존 state.accounts를 복제)
+  let mergedAccounts = Array.isArray(state.accounts) ? state.accounts.map(a => ({...a})) : [];
+  // 새로 읽은 계정 정보가 있을 경우 병합, 없으면 기본값 유지
+  const accountsToMerge = newAccounts.length ? newAccounts : deepClone(DEFAULT_ACCOUNTS);
+  accountsToMerge.forEach((acc) => {
+    const idx = mergedAccounts.findIndex(item => {
+      // normalizeSiteName을 이용해 사이트명을 비교합니다
+      return normalizeSiteName(item.site) === normalizeSiteName(acc.site) &&
+        String(item.id || "") === String(acc.id || "");
+    });
+    if (idx >= 0) {
+      // 같은 사이트+ID가 있으면 기존 정보를 업데이트 (memo, password, url, favorite, category)
+      mergedAccounts[idx] = { ...mergedAccounts[idx], ...acc };
+    } else {
+      mergedAccounts.push(acc);
+    }
+  });
+  state = { info: mergedInfo, accounts: normalizeAccountDefaults(mergedAccounts) };
   deleteMode = { info: {}, account: {} };
   render();
-  showToast(`엑셀을 불러왔어요. 사이트 계정 ${state.accounts.length}개를 적용했어요.`);
+  showToast(`엑셀을 병합했어요. 총 ${state.accounts.length}개 계정이 있습니다.`);
 }
 
 function handleUpload(file) {
   if (!file) return;
+  // 사용자가 현재 내용을 덮어쓰는 것을 확인하고, 업로드 전에 자동으로 로컬 저장(백업)합니다.
+  if (!confirm("이 엑셀 파일로 현재 데이터를 업데이트할까요? 업데이트 전에 현재 내용을 이 PC에 저장합니다.")) {
+    const uploadInput = document.getElementById("uploadInput");
+    if (uploadInput) uploadInput.value = "";
+    return;
+  }
+  // 현재 상태를 로컬 스토리지에 저장하여 백업합니다.
+  try {
+    saveLocal();
+  } catch (e) {
+    // saveLocal 내부에서 오류를 처리하므로 여기서는 무시
+  }
   const reader = new FileReader();
   reader.onload = e => {
     try {
@@ -774,10 +834,16 @@ function exportBasicExcel() {
 function saveLocal() {
   syncInputs();
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const serialized = JSON.stringify(state);
+    // localStorage는 브라우저마다 약 5MB 정도로 제한됩니다. 데이터가 너무 크면 저장하지 않습니다.
+    // 문자열 길이 기준으로 간단히 체크합니다.
+    if (serialized.length > 5_000_000) {
+      throw new Error("데이터가 너무 커 저장할 수 없어요. 일부 항목을 줄여주세요.");
+    }
+    localStorage.setItem(STORAGE_KEY, serialized);
     showToast("이 PC 브라우저에 저장했어요.");
   } catch (err) {
-    showToast("저장하지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
+    showToast(err.message || "저장하지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
   }
 }
 function loadLocal(options = {}) {
@@ -806,7 +872,7 @@ function resetAll() {
   try {
     localStorage.removeItem(STORAGE_KEY);
   } catch (err) {}
-  state = { info: structuredClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(structuredClone(DEFAULT_ACCOUNTS)) };
+  state = { info: deepClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(deepClone(DEFAULT_ACCOUNTS)) };
   deleteMode = { info: {}, account: {} };
   render();
   showToast("이 PC 저장내용을 초기화했어요.");
