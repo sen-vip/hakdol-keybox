@@ -7,8 +7,8 @@
 
 ## 🔗 바로가기
 
-- 배포 사이트: https://sen-vip.github.io/school-keybox/
-- GitHub 저장소: https://github.com/sen-vip/school-keybox
+- 배포 사이트: https://sen-vip.github.io/hakdol-keybox/
+- GitHub 저장소: https://github.com/sen-vip/hakdol-keybox
 
 ## ✨ 주요 기능
 
