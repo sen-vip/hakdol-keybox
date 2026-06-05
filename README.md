@@ -10,7 +10,6 @@
 - 배포 사이트: https://sen-vip.github.io/school-keybox/
 - GitHub 저장소: https://github.com/sen-vip/school-keybox
 
-기존 `hakdol-keybox` 저장소를 이름 변경해서 사용할 경우, GitHub Pages 주소도 저장소 이름에 맞춰 `school-keybox`로 바뀝니다.
 
 ## ✨ 주요 기능
 
