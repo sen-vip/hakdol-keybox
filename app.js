@@ -773,24 +773,43 @@ function exportBasicExcel() {
 // ============================================================
 function saveLocal() {
   syncInputs();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  showToast("이 PC 브라우저에 저장했어요.");
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    showToast("이 PC 브라우저에 저장했어요.");
+  } catch (err) {
+    showToast("저장하지 못했어요. 브라우저 저장소 설정을 확인해 주세요.");
+  }
 }
-function loadLocal() {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  if (!raw) return showToast("저장된 내용이 없어요.");
-  state = JSON.parse(raw);
-  state.accounts = normalizeAccountDefaults(state.accounts);
-  deleteMode = { info: {}, account: {} };
-  render();
-  showToast("저장 내용을 불러왔어요.");
+function loadLocal(options = {}) {
+  const { silent = false } = options;
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) {
+      if (!silent) showToast("저장된 내용이 없어요.");
+      return false;
+    }
+    const savedState = JSON.parse(raw);
+    if (!savedState || !savedState.info || !Array.isArray(savedState.accounts)) throw new Error("invalid saved data");
+    state = savedState;
+    state.accounts = normalizeAccountDefaults(state.accounts);
+    deleteMode = { info: {}, account: {} };
+    render();
+    if (!silent) showToast("저장 내용을 불러왔어요.");
+    return true;
+  } catch (err) {
+    if (!silent) showToast("저장 내용을 불러오지 못했어요. JSON 백업이 있으면 불러와 주세요.");
+    return false;
+  }
 }
 function resetAll() {
   if (!confirm("이 PC에 저장된 모든 정보를 초기화할까요?\n이 작업은 되돌릴 수 없습니다.")) return;
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (err) {}
   state = { info: structuredClone(DEFAULT_INFO), accounts: normalizeAccountDefaults(structuredClone(DEFAULT_ACCOUNTS)) };
   deleteMode = { info: {}, account: {} };
   render();
-  showToast("초기화했어요.");
+  showToast("이 PC 저장내용을 초기화했어요.");
 }
 function backupJson() {
   syncInputs();
@@ -901,4 +920,6 @@ document.querySelectorAll("input[name='pwMode']").forEach(el => el.onchange = e 
   render();
 });
 
-render();
+// 저장된 내용이 있으면 페이지를 열 때 자동으로 복원합니다.
+// 저장된 내용이 없거나 손상된 경우에는 기본 예시 데이터로 표시합니다.
+if (!loadLocal({ silent: true })) render();
