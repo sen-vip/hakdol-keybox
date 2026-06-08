@@ -965,7 +965,7 @@ function showUploadReviewModal(plan) {
         <button class="btn soft" type="button" data-upload-action="add-all">중복 허용하고 추가</button>
         <button class="btn danger" type="button" data-upload-action="cancel">취소</button>
         <button class="btn save-pc" type="button" data-upload-action="add-only">중복 항목 빼고 추가</button>
-        <button class="btn excel" type="button" data-upload-action="update">바뀐 내용 전부 반영</button>
+        <button class="btn excel" type="button" data-upload-action="update">엑셀 기준으로 동기화</button>
       </div>
       <p class="excel-modal-warn">‘중복 허용하고 추가’를 선택하면 같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.</p>
     </div>
