@@ -659,8 +659,10 @@ async function downloadTemplate() {
 function parseUploadedWorkbook(wb) {
   const uploadedInfo = {school:[], bank:[], card:[]};
   let uploadedAccounts = [];
+  const hasInfoSheet = wb.SheetNames.includes("기본정보");
+  const hasAccountsSheet = wb.SheetNames.includes("계정입력");
 
-  if (wb.SheetNames.includes("기본정보")) {
+  if (hasInfoSheet) {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets["기본정보"], {header:1, defval:""});
     rows.slice(1).forEach(([group, label, value]) => {
       const labelText = cleanImportText(label);
@@ -671,7 +673,7 @@ function parseUploadedWorkbook(wb) {
     });
   }
 
-  if (wb.SheetNames.includes("계정입력")) {
+  if (hasAccountsSheet) {
     const rows = XLSX.utils.sheet_to_json(wb.Sheets["계정입력"], {header:1, defval:""});
     const header = (rows[0] || []).map(x => cleanImportText(x));
     const isOld = header[0]?.includes("분류");
@@ -722,7 +724,7 @@ function parseUploadedWorkbook(wb) {
     });
   }
 
-  return { info: uploadedInfo, accounts: normalizeAccountDefaults(uploadedAccounts) };
+  return { info: uploadedInfo, accounts: normalizeAccountDefaults(uploadedAccounts), hasInfoSheet, hasAccountsSheet };
 }
 
 function cleanImportText(value) {
@@ -769,7 +771,7 @@ function buildUploadPlan(uploaded) {
     uploaded,
     info: {school:[], bank:[], card:[]},
     accounts: [],
-    counts: {new:0, changed:0, same:0}
+    counts: {new:0, changed:0, same:0, removed:0}
   };
 
   for (const key of ["school", "bank", "card"]) {
@@ -787,6 +789,20 @@ function buildUploadPlan(uploaded) {
       plan.info[key].push(item);
       plan.counts[item.type] += 1;
     });
+    if (uploaded.hasInfoSheet) {
+      existingRows.forEach((existing, existingIndex) => {
+        const rowKey = importInfoKey(existing);
+        if (!rowKey || seenKeys.has(rowKey)) return;
+        plan.info[key].push({
+          section: key,
+          sectionLabel: infoSectionLabel(key),
+          existingIndex,
+          uploaded: [cleanImportText(existing?.[0]), cleanImportText(existing?.[1])],
+          type: "removed"
+        });
+        plan.counts.removed += 1;
+      });
+    }
   }
 
   const existingAccounts = Array.isArray(state.accounts) ? state.accounts : [];
@@ -804,6 +820,20 @@ function buildUploadPlan(uploaded) {
     plan.accounts.push(item);
     plan.counts[item.type] += 1;
   });
+  if (uploaded.hasAccountsSheet) {
+    existingAccounts.forEach((existing, existingIndex) => {
+      const key = importAccountKey(existing);
+      if (!key || seenAccountKeys.has(key)) return;
+      plan.accounts.push({
+        section: "accounts",
+        sectionLabel: "사이트 계정",
+        existingIndex,
+        uploaded: normalizeUploadedAccount(existing),
+        type: "removed"
+      });
+      plan.counts.removed += 1;
+    });
+  }
   return plan;
 }
 function planItemList(plan) {
@@ -819,9 +849,35 @@ function applyUploadPlan(plan, mode) {
   syncInputs();
   const nextState = { info: deepClone(state.info || {}), accounts: Array.isArray(state.accounts) ? state.accounts.map(a => ({...a})) : [] };
 
+  if (mode === "update") {
+    if (plan.uploaded?.hasInfoSheet) {
+      for (const key of ["school", "bank", "card"]) {
+        nextState.info[key] = (plan.uploaded.info?.[key] || []).map(row => [cleanImportText(row?.[0]), cleanImportText(row?.[1])]);
+      }
+    }
+    if (plan.uploaded?.hasAccountsSheet) {
+      const existingFavoriteByKey = new Map();
+      nextState.accounts.forEach(acc => {
+        const key = importAccountKey(acc);
+        if (key && !existingFavoriteByKey.has(key)) existingFavoriteByKey.set(key, acc.favorite === true);
+      });
+      nextState.accounts = (plan.uploaded.accounts || []).map(acc => {
+        const uploaded = normalizeUploadedAccount(acc);
+        const key = importAccountKey(uploaded);
+        return { ...uploaded, favorite: existingFavoriteByKey.has(key) ? existingFavoriteByKey.get(key) : uploaded.favorite };
+      });
+    }
+    state = { info: nextState.info, accounts: normalizeAccountDefaults(nextState.accounts) };
+    deleteMode = { info: {}, account: {} };
+    render();
+    showToast(`신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트, 삭제 ${plan.counts.removed}개 반영했어요. 보관하려면 이 PC에 저장을 눌러주세요.`);
+    return;
+  }
+
   for (const key of ["school", "bank", "card"]) {
     if (!Array.isArray(nextState.info[key])) nextState.info[key] = [];
     (plan.info[key] || []).forEach(item => {
+      if (item.type === "removed") return;
       if (mode === "add-all") {
         nextState.info[key].push([...item.uploaded]);
         return;
@@ -835,6 +891,7 @@ function applyUploadPlan(plan, mode) {
   }
 
   (plan.accounts || []).forEach(item => {
+    if (item.type === "removed") return;
     const uploaded = normalizeUploadedAccount(item.uploaded);
     if (mode === "add-all") {
       nextState.accounts.push(uploaded);
@@ -877,14 +934,14 @@ function showUploadReviewModal(plan) {
 
   const bySection = planItemList(plan).reduce((acc, item) => {
     const label = item.sectionLabel || "기타";
-    if (!acc[label]) acc[label] = {new:0, changed:0, same:0};
+    if (!acc[label]) acc[label] = {new:0, changed:0, same:0, removed:0};
     acc[label][item.type] += 1;
     return acc;
   }, {});
   const sectionRows = Object.entries(bySection).map(([label, c]) => `
     <div class="excel-modal-section-row">
       <strong>${esc(label)}</strong>
-      <span>신규 ${c.new} · 변경 ${c.changed} · 동일 ${c.same}</span>
+      <span>신규 ${c.new} · 변경 ${c.changed} · 동일 ${c.same} · 삭제 ${c.removed}</span>
     </div>
   `).join("");
 
@@ -901,6 +958,7 @@ function showUploadReviewModal(plan) {
         <div><strong>${plan.counts.new}</strong><span>신규 항목</span></div>
         <div><strong>${plan.counts.changed}</strong><span>변경 가능</span></div>
         <div><strong>${plan.counts.same}</strong><span>동일 항목</span></div>
+        <div><strong>${plan.counts.removed}</strong><span>삭제 예정</span></div>
       </div>
       <div class="excel-modal-sections">${sectionRows}</div>
       <div class="excel-modal-actions">
@@ -924,6 +982,10 @@ function showUploadReviewModal(plan) {
     }
     if (selectedAction === "add-all") {
       const ok = confirm("같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.\n그래도 중복을 허용하고 모두 추가할까요?");
+      if (!ok) return;
+    }
+    if (selectedAction === "update" && plan.counts.removed > 0) {
+      const ok = confirm(`엑셀에 없는 기존 항목 ${plan.counts.removed}개가 삭제됩니다.\n그래도 바뀐 내용을 전부 반영할까요?`);
       if (!ok) return;
     }
     applyUploadPlan(plan, selectedAction);

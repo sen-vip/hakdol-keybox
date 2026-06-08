@@ -1742,7 +1742,7 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
 }
 .excel-modal-summary{
   display:grid;
-  grid-template-columns:repeat(3,1fr);
+  grid-template-columns:repeat(4,1fr);
   gap:10px;
   margin:20px 0 14px;
 }
