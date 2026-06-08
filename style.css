@@ -1701,10 +1701,7 @@ tr:hover .table-input,.info-row:hover .inline-input,.info-row:hover .label-input
   background:#fff;
   box-shadow:0 24px 70px rgba(15,23,42,.16);
   padding:28px;
-  max-height:calc(100vh - 48px);
-  overflow:auto;
 }
-
 .excel-modal-close{
   position:absolute;
   top:18px;

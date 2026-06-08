@@ -658,7 +658,6 @@ async function downloadTemplate() {
 
 function parseUploadedWorkbook(wb) {
   const uploadedInfo = {school:[], bank:[], card:[]};
-  const infoSectionsInUpload = {school:false, bank:false, card:false};
   let uploadedAccounts = [];
 
   if (wb.SheetNames.includes("기본정보")) {
@@ -668,7 +667,6 @@ function parseUploadedWorkbook(wb) {
       if (!labelText) return;
       const g = String(group || "");
       const key = g.includes("은행") ? "bank" : g.includes("결제") || g.includes("카드") ? "card" : "school";
-      infoSectionsInUpload[key] = true;
       uploadedInfo[key].push([labelText, cleanImportText(value)]);
     });
   }
@@ -724,7 +722,7 @@ function parseUploadedWorkbook(wb) {
     });
   }
 
-  return { info: uploadedInfo, infoSectionsInUpload, accounts: normalizeAccountDefaults(uploadedAccounts) };
+  return { info: uploadedInfo, accounts: normalizeAccountDefaults(uploadedAccounts) };
 }
 
 function cleanImportText(value) {
@@ -771,8 +769,7 @@ function buildUploadPlan(uploaded) {
     uploaded,
     info: {school:[], bank:[], card:[]},
     accounts: [],
-    counts: {new:0, changed:0, same:0},
-    infoSectionsInUpload: uploaded.infoSectionsInUpload || {school:false, bank:false, card:false}
+    counts: {new:0, changed:0, same:0}
   };
 
   for (const key of ["school", "bank", "card"]) {
@@ -824,15 +821,6 @@ function applyUploadPlan(plan, mode) {
 
   for (const key of ["school", "bank", "card"]) {
     if (!Array.isArray(nextState.info[key])) nextState.info[key] = [];
-
-    // 변경 내용 업데이트: 엑셀에 포함된 정보 섹션은 엑셀 내용과 순서를 기준으로 맞춥니다.
-    // 이렇게 해야 엑셀에서 삭제한 항목(예: 기관카드 10)이 화면에 계속 남는 문제가 생기지 않습니다.
-    // 단, 엑셀에 아예 포함되지 않은 섹션은 기존 데이터를 보존합니다.
-    if (mode === "update" && plan.infoSectionsInUpload?.[key]) {
-      nextState.info[key] = (plan.info[key] || []).map(item => [...item.uploaded]);
-      continue;
-    }
-
     (plan.info[key] || []).forEach(item => {
       if (mode === "add-all") {
         nextState.info[key].push([...item.uploaded]);
@@ -840,6 +828,8 @@ function applyUploadPlan(plan, mode) {
       }
       if (item.type === "new") {
         nextState.info[key].push([...item.uploaded]);
+      } else if (mode === "update" && item.type === "changed" && item.existingIndex >= 0) {
+        nextState.info[key][item.existingIndex] = [...item.uploaded];
       }
     });
   }
@@ -864,7 +854,7 @@ function applyUploadPlan(plan, mode) {
   const message = mode === "add-only"
     ? `신규 항목 ${plan.counts.new}개만 추가했어요.`
     : mode === "update"
-      ? `신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트했어요. 정보 섹션은 엑셀 기준으로 정리했어요.`
+      ? `신규 ${plan.counts.new}개 추가, 변경 ${plan.counts.changed}개 업데이트했어요.`
       : `업로드 항목 ${planItemList(plan).length}개를 새 항목으로 추가했어요.`;
   showToast(`${message} 보관하려면 이 PC에 저장을 눌러주세요.`);
 }
@@ -914,12 +904,12 @@ function showUploadReviewModal(plan) {
       </div>
       <div class="excel-modal-sections">${sectionRows}</div>
       <div class="excel-modal-actions">
-        <button class="btn save-pc" type="button" data-upload-action="add-only">신규만 추가</button>
-        <button class="btn excel" type="button" data-upload-action="update">변경 내용도 업데이트</button>
-        <button class="btn soft" type="button" data-upload-action="add-all">모두 새 항목으로 추가</button>
+        <button class="btn soft" type="button" data-upload-action="add-all">중복 허용하고 추가</button>
         <button class="btn danger" type="button" data-upload-action="cancel">취소</button>
+        <button class="btn save-pc" type="button" data-upload-action="add-only">겹치는 건 빼고 추가</button>
+        <button class="btn excel" type="button" data-upload-action="update">바뀐 내용 반영</button>
       </div>
-      <p class="excel-modal-warn">‘모두 새 항목으로 추가’를 선택하면 같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.</p>
+      <p class="excel-modal-warn">‘중복 허용하고 추가’를 선택하면 같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.</p>
     </div>
   `;
   modal.addEventListener("click", (event) => {
@@ -931,6 +921,10 @@ function showUploadReviewModal(plan) {
       resetUploadInput();
       showToast("엑셀 업로드를 취소했어요.");
       return;
+    }
+    if (selectedAction === "add-all") {
+      const ok = confirm("같은 사이트명, 계좌명, 카드명이 여러 개 생길 수 있어요.\n그래도 중복을 허용하고 모두 추가할까요?");
+      if (!ok) return;
     }
     applyUploadPlan(plan, selectedAction);
     closeUploadModal();
